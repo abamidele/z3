@@ -99,6 +99,7 @@ struct solver::imp {
             }
             nla::new_lemma lemma(m_nla_core, __FUNCTION__);
             lemma &= ex;
+            SASSERT(lemma.expl().size() == ex.size());
             m_nla_core.set_use_nra_model(true);
             break;
         }

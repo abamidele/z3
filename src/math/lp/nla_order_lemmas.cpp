@@ -216,8 +216,11 @@ void order::order_lemma_on_factorization(const monic& m, const factorization& ab
     if (mv != fv) {
         bool gt = mv > fv;
         for (unsigned j = 0, k = 1; j < 2; j++, k--) {
+            lpvar b = var(ab[j]);
+            if (!c().var_is_int(b) || val(b).is_big())
+                continue;
             new_lemma lemma(_(), __FUNCTION__);
-            order_lemma_on_ab(lemma, m, rsign, var(ab[k]), var(ab[j]), gt);
+            order_lemma_on_ab(lemma, m, rsign, var(ab[k]), b, gt);
             lemma &= ab;
             lemma &= m;
         }
@@ -326,8 +329,6 @@ bool order::order_lemma_on_ac_and_bc_and_factors(const monic& ac,
    lemma b != val(b) || sign*m <= a*val(b)
 */
 void order::order_lemma_on_ab_gt(new_lemma& lemma, const monic& m, const rational& sign, lpvar a, lpvar b) {
-    if (!c().var_is_int(b) && val(b).is_big())
-        return;
     SASSERT(sign * var_val(m) > val(a) * val(b));
     // negate b == val(b)
     lemma |= ineq(b, llc::NE, val(b));
@@ -339,8 +340,6 @@ void order::order_lemma_on_ab_gt(new_lemma& lemma, const monic& m, const rationa
    lemma b != val(b) || sign*m >= a*val(b)
 */
 void order::order_lemma_on_ab_lt(new_lemma& lemma, const monic& m, const rational& sign, lpvar a, lpvar b) {
-    if (!c().var_is_int(b) && val(b).is_big())
-        return;
     TRACE("nla_solver", tout << "sign = " << sign << ", m = "; c().print_monic(m, tout) << ", a = "; c().print_var(a, tout) <<
           ", b = "; c().print_var(b, tout) << "\n";);
     SASSERT(sign * var_val(m) < val(a) * val(b));
@@ -351,6 +350,7 @@ void order::order_lemma_on_ab_lt(new_lemma& lemma, const monic& m, const rationa
 }
 
 void order::order_lemma_on_ab(new_lemma& lemma, const monic& m, const rational& sign, lpvar a, lpvar b, bool gt) {
+    SASSERT(c().var_is_int(b) && !val(b).is_big());
     if (gt)
         order_lemma_on_ab_gt(lemma, m, sign, a, b);
     else 

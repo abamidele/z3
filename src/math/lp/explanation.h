@@ -20,45 +20,33 @@ Revision History:
 #pragma once
 #include <unordered_set>
 #include "math/lp/lp_utils.h"
+#include "util/hashtable.h"
+
 namespace lp {
 class explanation {
-    vector<std::pair<mpq, constraint_index>> m_explanation;
-    std::unordered_set<unsigned> m_set_of_ci;
+    int_hashtable<int_hash, default_eq<int> > m_set;
+
 public:
     explanation() {}
     template <typename T>
     explanation(const T& t) { for ( unsigned c : t) add(c); }
     
-    void clear() { m_explanation.clear(); m_set_of_ci.clear(); }
-    vector<std::pair<mpq, constraint_index>>::const_iterator begin() const { return m_explanation.begin(); }
-    vector<std::pair<mpq, constraint_index>>::const_iterator end() const { return m_explanation.end(); }
-    void push_justification(constraint_index j, const mpq& v) {
-        if (m_set_of_ci.find(j) != m_set_of_ci.end()) return;
-        m_set_of_ci.insert(j);
-        m_explanation.push_back(std::make_pair(v, j));
-    }
-    void push_justification(constraint_index j) {
-        if (m_set_of_ci.find(j) != m_set_of_ci.end()) return;
-        m_set_of_ci.insert(j);
-        m_explanation.push_back(std::make_pair(one_of_type<mpq>(), j));
+    void clear() { m_set.reset(); }
+    int_hashtable<int_hash, default_eq<int>>::iterator begin() const { return m_set.begin(); }
+    int_hashtable<int_hash, default_eq<int>>::iterator end() const { return m_set.end(); }
+
+    void add(unsigned j) {
+        m_set.insert(j);
     }
 
-    void push_back(constraint_index j) {
-        push_justification(j);
+    void push_back(unsigned j) {
+        add(j);
     }
-    
-    void add(const explanation& e) {
-        for (const auto& p: e.m_explanation) {
-            add(p.second);
-        }
-    }
+
     template <typename T>
-    void add_expl(const T& e) { for (auto j: e) add(j); }
-    void add(unsigned ci) { push_justification(ci); }
+    void add(const T& e) { for (unsigned j: e) add(j); }
     
-    void add(const std::pair<mpq, constraint_index>& j) { push_justification(j.second, j.first); }
-
-    bool empty() const {  return m_explanation.empty();  }
-    size_t size() const { return m_explanation.size(); }
+    bool empty() const {  return m_set.empty();  }
+    size_t size() const { return m_set.size(); }
 };
 }

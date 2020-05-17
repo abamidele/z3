@@ -260,8 +260,8 @@ std::ostream& core::print_explanation(const lp::explanation& exp, std::ostream& 
     out << "expl: ";
     unsigned i = 0;
     for (auto &p : exp) {
-        out << "(" << p.second << ")";
-        m_lar_solver.constraints().display(out, [this](lpvar j) { return var_str(j);}, p.second);
+        out << "(" << p << ")";
+        m_lar_solver.constraints().display(out, [this](lpvar j) { return var_str(j);}, p);
         if (++i < exp.size())
             out << "      ";
     }
@@ -855,7 +855,7 @@ std::unordered_set<lpvar> core::collect_vars(const lemma& l) const {
         }
     }
     for (const auto& p : l.expl()) {
-        const auto& c = m_lar_solver.constraints()[p.second];
+        const auto& c = m_lar_solver.constraints()[p];
         for (const auto& r : c.coeffs()) {
             insert_j(r.second);
         }
@@ -1142,8 +1142,8 @@ std::ostream& new_lemma::display(std::ostream & out) const {
     auto const& lemma = current();
 
     for (auto &p : lemma.expl()) {
-        out << "(" << p.second << ") ";
-        c.m_lar_solver.constraints().display(out, [this](lpvar j) { return c.var_str(j);}, p.second);
+        out << "(" << p << ") ";
+        c.m_lar_solver.constraints().display(out, [this](lpvar j) { return c.var_str(j);}, p);
     }
     out << " ==> ";
     if (lemma.ineqs().empty()) {

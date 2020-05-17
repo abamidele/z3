@@ -220,9 +220,7 @@ class lar_solver : public column_namer {
     static void register_monoid_in_map(std::unordered_map<var_index, mpq> & coeffs, const mpq & a, unsigned j);
     bool the_left_sides_sum_to_zero(const vector<std::pair<mpq, unsigned>> & evidence) const;
     bool the_right_sides_do_not_sum_to_zero(const vector<std::pair<mpq, unsigned>> & evidence);
-    bool explanation_is_correct(explanation&) const;
     bool inf_explanation_is_correct() const;
-    mpq sum_of_right_sides_of_explanation(explanation &) const;
     void get_infeasibility_explanation_for_inf_sign(
         explanation & exp,
         const vector<std::pair<mpq, unsigned>> & inf_row,

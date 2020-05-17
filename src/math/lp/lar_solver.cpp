@@ -233,7 +233,7 @@ void lar_solver::explain_implied_bound(implied_bound & ib, lp_bound_propagator &
         const ul_pair & ul =  m_columns_to_ul_pairs[j];
         auto witness = sign > 0? ul.upper_bound_witness(): ul.lower_bound_witness();
         lp_assert(is_valid(witness));
-        bp.consume(a, witness);
+        bp.consume(witness);
     }
     // lp_assert(implied_bound_is_correctly_explained(ib, explanation));
 }
@@ -307,8 +307,8 @@ void lar_solver::fill_explanation_from_crossed_bounds_column(explanation & evide
     
     // this is the case when the lower bound is in conflict with the upper one
     const ul_pair & ul =  m_columns_to_ul_pairs[m_crossed_bounds_column];
-    evidence.push_justification(ul.upper_bound_witness(),  numeric_traits<mpq>::one());
-    evidence.push_justification(ul.lower_bound_witness(), -numeric_traits<mpq>::one());
+    evidence.add(ul.upper_bound_witness());
+    evidence.add(ul.lower_bound_witness());
 }
 
     
@@ -1057,55 +1057,6 @@ bool lar_solver::the_left_sides_sum_to_zero(const vector<std::pair<mpq, unsigned
     return true;
 }
 
-
-bool lar_solver::explanation_is_correct(explanation& explanation) const {
-    return true;
-#if 0
-    // disabled: kind is uninitialized
-#ifdef Z3DEBUG
-    lconstraint_kind kind;
-    lp_assert(the_left_sides_sum_to_zero(explanation));
-    mpq rs = sum_of_right_sides_of_explanation(explanation);
-    switch (kind) {
-    case LE: lp_assert(rs < zero_of_type<mpq>());
-        break;
-    case LT: lp_assert(rs <= zero_of_type<mpq>());
-        break;
-    case GE: lp_assert(rs > zero_of_type<mpq>());
-        break;
-    case GT: lp_assert(rs >= zero_of_type<mpq>());
-        break;
-    case EQ: lp_assert(rs != zero_of_type<mpq>());
-        break;
-    default:
-        lp_assert(false);
-        return false;
-    }
-#endif
-#endif
-    return true;
-}
-
-bool lar_solver::inf_explanation_is_correct() const {
-#ifdef Z3DEBUG
-    explanation exp;
-    get_infeasibility_explanation(exp);
-    return explanation_is_correct(exp);
-#endif
-    return true;
-}
-
-mpq lar_solver::sum_of_right_sides_of_explanation(explanation& exp) const {
-    mpq ret = numeric_traits<mpq>::zero();
-    for (auto & it : exp) {
-        mpq coeff = it.first;
-        constraint_index con_ind = it.second;
-        lp_assert(m_constraints.valid_index(con_ind));
-        ret += (m_constraints[con_ind].rhs() - m_constraints[con_ind].get_free_coeff_of_left_side()) * coeff;
-    }
-    return ret;
-}
-
 bool lar_solver::has_lower_bound(var_index var, constraint_index& ci, mpq& value, bool& is_strict) const {
 
     if (var >= m_columns_to_ul_pairs.size()) {
@@ -1176,7 +1127,6 @@ void lar_solver::get_infeasibility_explanation(explanation& exp) const {
     int inf_sign;
     auto inf_row = m_mpq_lar_core_solver.get_infeasibility_info(inf_sign);
     get_infeasibility_explanation_for_inf_sign(exp, inf_row, inf_sign);
-    lp_assert(explanation_is_correct(exp));
 }
 
 
@@ -1195,7 +1145,7 @@ void lar_solver::get_infeasibility_explanation_for_inf_sign(
 
         constraint_index bound_constr_i = adj_sign < 0 ? ul.upper_bound_witness() : ul.lower_bound_witness();
         lp_assert(m_constraints.valid_index(bound_constr_i));
-        exp.push_justification(bound_constr_i, coeff);
+        exp.add(bound_constr_i);
     } 
 }
 
